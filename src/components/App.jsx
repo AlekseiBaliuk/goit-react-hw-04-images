@@ -19,7 +19,7 @@ class App extends Component {
     showErrorMessage: false,
   };
 
-  componentDidUpdate(prevProps, prevState) {
+  async componentDidUpdate(prevProps, prevState) {
     const prevSearchQuery = prevState.searchQuery;
     const nextSearchQuery = this.state.searchQuery;
 
@@ -32,33 +32,60 @@ class App extends Component {
     }
   }
 
-  getImages(searchQuery, page) {
-    this.setState({ showLoader: true, showErrorMessage: false });
-    fetchImages(searchQuery, page)
-      .then(searchData => {
-        if (searchData.totalHits === 0) {
-          this.setState({ showErrorMessage: true });
-        }
-        searchData.hits.map(({ id, webformatURL, largeImageURL, tags }) =>
-          this.setState(prevState => ({
-            // showErrorMessage: searchData.totalHits;
-            images: [
-              ...prevState.images,
-              { id, webformatURL, largeImageURL, tags },
-            ],
-          }))
-        );
-      })
-      .catch(error => this.setState({ error }))
-      .finally(() => {
-        this.setState({
-          showLoader: false,
-        });
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: 'smooth',
-        });
+  async getImages(searchQuery, page) {
+    try {
+      this.setState({ showLoader: true, showErrorMessage: false });
+      const data = await fetchImages(searchQuery, page);
+
+      if (data.totalHits === 0) {
+        this.setState({ showErrorMessage: true });
+      }
+      data.hits.map(({ id, webformatURL, largeImageURL, tags }) =>
+        this.setState(prevState => ({
+          images: [
+            ...prevState.images,
+            { id, webformatURL, largeImageURL, tags },
+          ],
+        }))
+      );
+    } catch (error) {
+      this.setState({ error });
+    } finally {
+      this.setState({
+        showLoader: false,
       });
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+
+    // this.setState({ showLoader: true, showErrorMessage: false });
+    // fetchImages(searchQuery, page)
+    //   .then(searchData => {
+    //     if (searchData.totalHits === 0) {
+    //       this.setState({ showErrorMessage: true });
+    //     }
+    //     searchData.hits.map(({ id, webformatURL, largeImageURL, tags }) =>
+    //       this.setState(prevState => ({
+    //         // showErrorMessage: searchData.totalHits;
+    //         images: [
+    //           ...prevState.images,
+    //           { id, webformatURL, largeImageURL, tags },
+    //         ],
+    //       }))
+    //     );
+    //   })
+    //   .catch(error => this.setState({ error }))
+    //   .finally(() => {
+    //     this.setState({
+    //       showLoader: false,
+    //     });
+    //     window.scrollTo({
+    //       top: document.documentElement.scrollHeight,
+    //       behavior: 'smooth',
+    //     });
+    //   });
   }
 
   handleFormSubmit = searchQuery => {
